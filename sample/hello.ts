@@ -50,3 +50,13 @@ export interface HelloInterface {
 export interface DeprecatedInterface {
   readonly prop: string;
 }
+
+export interface InheritDepInterface extends DeprecatedInterface {
+  readonly key: string;
+}
+
+export class InheritDepClass extends DeprecatedClass {
+  anotherMethod() {
+    fs.writeFileSync('/tmp/somewhere', 'something');
+  }
+}

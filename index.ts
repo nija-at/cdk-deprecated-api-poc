@@ -1,6 +1,7 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as ts from 'typescript';
+import { recordRemoval, undeprecatedHeritage } from './heritage';
 
 /**
  * Execute by running `yarn build && node index`
@@ -13,7 +14,9 @@ const now = new Date();
 function transformSource(ctx: ts.TransformationContext) {
   function visitor(node: ts.Node): ts.Node {
     if (ts.isSourceFile(node)) {
-      const filtered = node.statements.filter((statement) => !isDeprecated(statement));
+      const deprecated = node.statements.filter(s => isDeprecated(s));
+      deprecated.forEach(d => recordRemoval(d));
+      const filtered = node.statements.filter(s => !deprecated.includes(s));
       const updated = ts.updateSourceFileNode(
         node.getSourceFile(),
         filtered,
@@ -25,7 +28,8 @@ function transformSource(ctx: ts.TransformationContext) {
       );
       return ts.visitEachChild(updated, visitor, ctx);
     } else if (ts.isClassDeclaration(node)) {
-      const filtered = node.members.filter((e) => !isDeprecated(e));
+      const heritage = undeprecatedHeritage(node.heritageClauses);
+      const filtered = node.members.filter(e => !isDeprecated(e));
       return ts.addSyntheticTrailingComment(
         ts.updateClassDeclaration(
           node,
@@ -33,7 +37,7 @@ function transformSource(ctx: ts.TransformationContext) {
           node.modifiers,
           node.name,
           node.typeParameters,
-          node.heritageClauses,
+          heritage,
           filtered,
         ),
         ts.SyntaxKind.SingleLineCommentTrivia,
@@ -41,6 +45,7 @@ function transformSource(ctx: ts.TransformationContext) {
         false,
       );
     } else if (ts.isInterfaceDeclaration(node)) {
+      const heritage = undeprecatedHeritage(node.heritageClauses);
       const filtered = node.members.filter((e) => !isDeprecated(e));
       return ts.addSyntheticTrailingComment(
         ts.updateInterfaceDeclaration(
@@ -49,7 +54,7 @@ function transformSource(ctx: ts.TransformationContext) {
           node.modifiers,
           node.name,
           node.typeParameters,
-          node.heritageClauses,
+          heritage,
           filtered,
         ),
         ts.SyntaxKind.SingleLineCommentTrivia,
