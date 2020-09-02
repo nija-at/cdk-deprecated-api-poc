@@ -60,3 +60,8 @@ export class InheritDepClass extends DeprecatedClass {
     fs.writeFileSync('/tmp/somewhere', 'something');
   }
 }
+
+/** @deprecated */
+export const deprecatedConst = 'deprecated';
+
+export const regularConst = 50;

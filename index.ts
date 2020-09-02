@@ -74,6 +74,7 @@ function isDeprecated(node: ts.Node) {
     ts.SyntaxKind.PropertySignature,
     ts.SyntaxKind.ClassDeclaration,
     ts.SyntaxKind.InterfaceDeclaration,
+    ts.SyntaxKind.VariableStatement,
   ];
   if (deprecatedKinds.includes(node.kind)) {
     const sourceText = node.getSourceFile().getFullText();
